@@ -1,7 +1,7 @@
 # MiAI_n8n_llm_vps
 Demo of use n8n and LLM on Linux VPS
 
-Video link:  https://youtu.be/_52-kz08LvU
+Video link:  https://youtu.be/mvyRYDYjHZs
 
 #MìAI <br>
 Fanpage: http://facebook.com/miaiblog<br>
