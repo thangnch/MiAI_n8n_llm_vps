@@ -1,0 +1,379 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1KDrnJsZ3IDYpJTOVvW7D-dYSUMXu552U3zNOUypFN5M",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KDrnJsZ3IDYpJTOVvW7D-dYSUMXu552U3zNOUypFN5M/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "STT",
+              "lookupValue": "={{ $json.current }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        20,
+        -60
+      ],
+      "id": "c2664452-15f2-4ab0-805d-875542db30a3",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "uQ7gAKYWKONzB9fy",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6b73acbd-9459-4429-94da-5d995af90703",
+              "leftValue": "={{ $('Google Sheets').item.json['Hình ảnh'] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        460,
+        -60
+      ],
+      "id": "6d06fc35-7f35-408f-9d3b-d8beea2e0ae7",
+      "name": "Nếu ảnh rỗng"
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v20.0",
+        "node": "me",
+        "edge": "videos",
+        "sendBinaryData": true,
+        "binaryPropertyName": "data",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "title",
+                "value": "={{ $('Google Sheets').item.json['Tên'] }}"
+              },
+              {
+                "name": "description",
+                "value": "={{ $('Google Sheets').item.json['Mô tả'] }}\n-----\n{{ $('AI Agent').item.json.output }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        980,
+        -240
+      ],
+      "id": "26ce04ad-e3e5-49a2-ab90-c2bce77d486e",
+      "name": "Facebook Post Video",
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "PjdvIYmbLfuBzPvc",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Google Sheets').item.json.Video }}",
+          "mode": "url"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        740,
+        -240
+      ],
+      "id": "3477252e-141c-4432-bfff-61c8933914ca",
+      "name": "Tải file video về",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "TWttDueJV6p7Cf8c",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Google Sheets').item.json['Hình ảnh'] }}",
+          "mode": "url"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        740,
+        0
+      ],
+      "id": "8ac96c8b-d056-4145-bfe5-513dcc946cd2",
+      "name": "Tải file ảnh về",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "TWttDueJV6p7Cf8c",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Access or initialize Persistent Data\nconst persistentData = $getWorkflowStaticData('global');\n\n// Initialize the current counter if it doesn't exist\nif (typeof persistentData.counter === 'undefined') {\n  persistentData.counter = 0;\n}\n\nconst updatedCounter = persistentData.counter + 1;\n// Update the current counter\nif (updatedCounter > 2) {\n  persistentData.counter = 1;\n} else {\n  persistentData.counter = updatedCounter;\n}\n\n// Return the selected element\nreturn [\n  {\n    json: { current: persistentData.counter  }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -200,
+        -60
+      ],
+      "id": "5bbd7756-4a22-4a79-8b36-d9d3b370c6c1",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -440,
+        -60
+      ],
+      "id": "4f24dc75-7f52-44e6-aca5-68c857701a51",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Bạn là một chuyên gia, hãy bình luận về sản phẩm trong đoạn sau:\n\n{{ $json['Tên'] }}\n{{ $json['Mô tả'] }}\n\nBình luận tích cực để bán hàng :D",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        180,
+        -120
+      ],
+      "id": "3630ad72-5d4c-488d-a989-9e1ef1963d97",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama3.2:latest",
+        "options": {
+          "baseURL": "http://103.20.97.116:5050/v1"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        180,
+        160
+      ],
+      "id": "9e4e8b2b-656a-4e46-83e1-411b44f7ebd1",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "wzHayAsVH6LedYCx",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v20.0",
+        "node": "me",
+        "edge": "photos",
+        "sendBinaryData": true,
+        "binaryPropertyName": "data",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "message",
+                "value": "={{ $('Google Sheets').item.json['Tên'] }}\n{{ $('Google Sheets').item.json['Mô tả'] }}\n\n-------\n{{ $('AI Agent').item.json.output }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        0
+      ],
+      "id": "e534b545-ef92-451f-9b80-d49200131bde",
+      "name": "Facebook Post Ảnh",
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "PjdvIYmbLfuBzPvc",
+          "name": "Facebook Graph account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nếu ảnh rỗng": {
+      "main": [
+        [
+          {
+            "node": "Tải file video về",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Tải file ảnh về",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tải file video về": {
+      "main": [
+        [
+          {
+            "node": "Facebook Post Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tải file ảnh về": {
+      "main": [
+        [
+          {
+            "node": "Facebook Post Ảnh",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Nếu ảnh rỗng",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": -1
+  },
+  "versionId": "41a37c01-5764-4a58-8065-f64ca402509f",
+  "meta": {
+    "instanceId": "d164c36441f6cf70af7682b5670192161f17fa3861caf9e3a2f8641200850cfc"
+  },
+  "id": "1m8qkwfOD9oM9CxG",
+  "tags": []
+}
